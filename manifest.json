@@ -1,0 +1,118 @@
+{
+  "manifest_version": "0.3",
+  "name": "ynab-mcp",
+  "display_name": "YNAB",
+  "version": "1.8.0",
+  "description": "A custom MCP server for YNAB (You Need A Budget) — view budgets, categorize and approve transactions, search, and reporting",
+  "author": {
+    "name": "Scott Fontaine"
+  },
+  "server": {
+    "type": "node",
+    "entry_point": "index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/index.js"],
+      "env": {
+        "YNAB_ACCESS_TOKEN": "${user_config.access_token}"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "hello",
+      "description": "Says hello back, to confirm the YNAB MCP server is connected and working."
+    },
+    {
+      "name": "list_budgets",
+      "description": "Lists all YNAB budgets available to this account."
+    },
+    {
+      "name": "get_ready_to_assign",
+      "description": "Gets the current 'Ready to Assign' amount for a budget."
+    },
+    {
+      "name": "list_accounts",
+      "description": "Lists the open accounts in a budget with their current balances."
+    },
+    {
+      "name": "list_all_account_balances",
+      "description": "Lists account balances across every budget, grouped by budget."
+    },
+    {
+      "name": "list_categories",
+      "description": "Lists category groups and categories in a budget, with balances."
+    },
+    {
+      "name": "move_money_between_categories",
+      "description": "Moves budgeted money from one category to another within the same month."
+    },
+    {
+      "name": "list_uncategorized_transactions",
+      "description": "Lists transactions that don't yet have a category assigned."
+    },
+    {
+      "name": "list_unapproved_transactions",
+      "description": "Lists transactions that haven't been approved yet."
+    },
+    {
+      "name": "approve_transaction",
+      "description": "Marks a transaction as approved."
+    },
+    {
+      "name": "search_transactions",
+      "description": "Searches transactions by payee, category, account, and/or date range."
+    },
+    {
+      "name": "suggest_category",
+      "description": "Suggests a category for a transaction based on the payee's categorization history and the transaction amount."
+    },
+    {
+      "name": "bulk_suggest_categories",
+      "description": "Suggests categories for every uncategorized transaction at once, as a review list."
+    },
+    {
+      "name": "categorize_transaction",
+      "description": "Assigns a category to a specific transaction."
+    },
+    {
+      "name": "split_transaction",
+      "description": "Splits a transaction across multiple categories with different amounts."
+    },
+    {
+      "name": "create_category_group",
+      "description": "Creates a new category group in a budget."
+    },
+    {
+      "name": "create_category",
+      "description": "Creates a new category within an existing category group."
+    },
+    {
+      "name": "spending_by_category",
+      "description": "Reports total spending per category over a date range."
+    },
+    {
+      "name": "get_month_summary",
+      "description": "Financial snapshot for a budget month: income, budgeted, spent, age of money."
+    },
+    {
+      "name": "list_overspent_categories",
+      "description": "Lists categories that have been overspent this month."
+    }
+  ],
+  "user_config": {
+    "access_token": {
+      "type": "string",
+      "title": "YNAB Personal Access Token",
+      "description": "Generate one in YNAB under Account Settings → Developer Settings → New Token.",
+      "sensitive": true,
+      "required": true
+    }
+  },
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "node": ">=18.0.0"
+    }
+  }
+}
