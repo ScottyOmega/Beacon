@@ -15,6 +15,8 @@ Built as a Claude Desktop Extension (`.mcpb`), which packages the server so it c
 | `create_category_group` | Creates a new category group |
 | `create_category` | Creates a new category in an existing group |
 | `get_ready_to_assign` | Current "Ready to Assign" amount |
+| `get_category_targets` | Lists categories with a target (goal) set, and progress toward it |
+| `set_category_target` | Sets, updates, or clears a target (goal) on a category |
 | `get_month_summary` | Income/budgeted/spent/age-of-money snapshot |
 | `list_overspent_categories` | Categories that went negative this month |
 | `spending_by_category` | Total spend per category over a date range |
@@ -56,7 +58,7 @@ Then install the resulting `ynab-mcp.mcpb` as described above.
 
 - Your YNAB token is never stored in this repository or bundled into the `.mcpb` package. It's collected by Claude Desktop's own extension settings UI (a masked field) and injected as an environment variable (`YNAB_ACCESS_TOKEN`) when the server runs.
 - The server only talks to `api.ynab.com` using that token; nothing else.
-- Tools that change data (`categorize_transaction`, `split_transaction`, `approve_transaction`, `move_money_between_categories`, `create_category`, `create_category_group`) only run when Claude explicitly calls them — nothing runs automatically in the background.
+- Tools that change data (`categorize_transaction`, `split_transaction`, `approve_transaction`, `move_money_between_categories`, `create_category`, `create_category_group`, `set_category_target`) only run when Claude explicitly calls them — nothing runs automatically in the background.
 
 ## License
 
