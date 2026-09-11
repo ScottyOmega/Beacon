@@ -1,0 +1,39 @@
+<svg viewBox="0 0 900 280" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="900" height="280" fill="#ffffff"/>
+
+  <!-- Claude Desktop -->
+  <rect x="20" y="90" width="220" height="100" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="130" y="130" text-anchor="middle" font-size="17" font-weight="600" fill="#0f172a">Claude Desktop</text>
+  <text x="130" y="153" text-anchor="middle" font-size="12.5" fill="#64748b">you, chatting</text>
+
+  <!-- Arrow 1 -->
+  <line x1="240" y1="140" x2="330" y2="140" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="285" y="122" text-anchor="middle" font-size="11.5" fill="#475569">MCP</text>
+  <text x="285" y="163" text-anchor="middle" font-size="11.5" fill="#475569">(local, stdio)</text>
+
+  <!-- YNAB MCP Server -->
+  <rect x="340" y="75" width="240" height="130" rx="12" fill="#eff6ff" stroke="#93c5fd" stroke-width="2"/>
+  <text x="460" y="115" text-anchor="middle" font-size="17" font-weight="600" fill="#1e3a8a">YNAB MCP Server</text>
+  <text x="460" y="137" text-anchor="middle" font-size="12.5" fill="#3b5c99">this repo &#183; Node.js</text>
+  <text x="460" y="158" text-anchor="middle" font-size="12.5" fill="#3b5c99">22 tools</text>
+  <text x="460" y="179" text-anchor="middle" font-size="11.5" fill="#64748b">runs on your machine</text>
+
+  <!-- Arrow 2 -->
+  <line x1="580" y1="140" x2="670" y2="140" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="625" y="122" text-anchor="middle" font-size="11.5" fill="#475569">HTTPS</text>
+  <text x="625" y="163" text-anchor="middle" font-size="11.5" fill="#475569">+ your token</text>
+
+  <!-- YNAB API -->
+  <rect x="680" y="90" width="200" height="100" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="780" y="130" text-anchor="middle" font-size="17" font-weight="600" fill="#0f172a">YNAB</text>
+  <text x="780" y="153" text-anchor="middle" font-size="12.5" fill="#64748b">your real budget data</text>
+
+  <!-- Footnote -->
+  <text x="450" y="255" text-anchor="middle" font-size="12" fill="#94a3b8">Your YNAB token is entered in Claude's extension settings — never stored in this repo.</text>
+</svg>

@@ -1,8 +1,13 @@
 # YNAB MCP Server
 
-A custom [MCP](https://modelcontextprotocol.io) server that connects Claude to [YNAB](https://www.ynab.com) (You Need A Budget). It lets Claude view your budgets, accounts, and categories; search and categorize transactions; suggest categories based on payee history; split transactions; move money between categories; and pull spending reports — all through conversation.
+[![Latest release](https://img.shields.io/github/v/release/ScottyOmega/Beacon)](https://github.com/ScottyOmega/Beacon/releases/latest)
+[![License: MIT](https://img.shields.io/github/license/ScottyOmega/Beacon)](LICENSE)
+
+A custom [MCP](https://modelcontextprotocol.io) server that connects Claude to [YNAB](https://www.ynab.com) (You Need A Budget). It lets Claude view your budgets, accounts, and categories; search and categorize transactions; suggest categories based on payee history; split transactions; move money between categories; set category targets; and pull spending reports — all through conversation.
 
 Built as a Claude Desktop Extension (`.mcpb`), which packages the server so it can be installed with a couple of clicks.
+
+<img src="docs/architecture.svg" alt="Claude Desktop talks to the YNAB MCP Server over local MCP, which talks to the YNAB API over HTTPS using your personal access token" width="100%">
 
 ## Tools
 
