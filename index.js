@@ -247,6 +247,118 @@ server.tool(
   }
 );
 
+const GOAL_TYPE_LABELS = {
+  TB: "Target Balance",
+  TBD: "Target Balance by Date",
+  MF: "Monthly Funding",
+  NEED: "Plan Your Spending",
+  DEBT: "Debt Payoff",
+};
+
+server.tool(
+  "get_category_targets",
+  "Lists categories that have a target (goal) set, with the target amount, type, due date if any, and progress. Categories without a target are omitted.",
+  {
+    budget_id: z
+      .string()
+      .optional()
+      .default("last-used")
+      .describe("The budget ID, or 'last-used' for the most recently used budget."),
+  },
+  async ({ budget_id }) => {
+    try {
+      const data = await ynabFetch(`/budgets/${budget_id}/categories`);
+      const targets = data.category_groups
+        .filter((g) => !g.hidden && !g.deleted)
+        .flatMap((g) =>
+          g.categories
+            .filter((c) => !c.hidden && !c.deleted && c.goal_type)
+            .map((c) => ({
+              category_id: c.id,
+              group_name: g.name,
+              category_name: c.name,
+              target_type: GOAL_TYPE_LABELS[c.goal_type] ?? c.goal_type,
+              target_amount: formatCurrency(c.goal_target),
+              target_date: c.goal_target_date,
+              percentage_complete: c.goal_percentage_complete,
+              underfunded_this_month: formatCurrency(c.goal_under_funded ?? 0),
+            }))
+        );
+      if (targets.length === 0) {
+        return textResult({ message: "No categories have a target set." });
+      }
+      return textResult(targets);
+    } catch (error) {
+      return errorResult(error);
+    }
+  }
+);
+
+server.tool(
+  "set_category_target",
+  "Sets, updates, or clears a target (goal) on a category. Provide either goal_target_date (a one-time target due by a specific date) or goal_frequency (a recurring target), not both. Pass clear_target: true to remove an existing target instead.",
+  {
+    budget_id: z
+      .string()
+      .optional()
+      .default("last-used")
+      .describe("The budget ID, or 'last-used' for the most recently used budget."),
+    category_id: z.string().describe("The category to set a target on. Look up with list_categories."),
+    goal_target: z
+      .number()
+      .optional()
+      .describe("The target dollar amount, e.g. 500.00. Required unless clear_target is true."),
+    goal_target_date: z
+      .string()
+      .optional()
+      .describe("Due date for the target, YYYY-MM-DD. Cannot be combined with goal_frequency."),
+    goal_frequency: z
+      .enum(["monthly", "weekly", "yearly"])
+      .optional()
+      .describe("Makes the target recurring at this cadence. Cannot be combined with goal_target_date."),
+    clear_target: z
+      .boolean()
+      .optional()
+      .default(false)
+      .describe("Set true to remove the category's existing target instead of setting one."),
+  },
+  async ({ budget_id, category_id, goal_target, goal_target_date, goal_frequency, clear_target }) => {
+    try {
+      let body;
+      if (clear_target) {
+        body = { goal_target: null };
+      } else {
+        if (goal_target === undefined) {
+          return errorResult(
+            new Error("Provide goal_target, or set clear_target: true to remove an existing target.")
+          );
+        }
+        if (goal_target_date && goal_frequency) {
+          return errorResult(
+            new Error("goal_target_date and goal_frequency can't both be set — a target is either due by a date or recurring, not both.")
+          );
+        }
+        body = { goal_target: Math.round(goal_target * 1000) };
+        if (goal_target_date) body.goal_target_date = goal_target_date;
+        if (goal_frequency) body.goal_frequency = goal_frequency;
+      }
+      const data = await ynabFetch(`/budgets/${budget_id}/categories/${category_id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ category: body }),
+      });
+      const c = data.category;
+      return textResult({
+        category_name: c.name,
+        target_type: c.goal_type ? GOAL_TYPE_LABELS[c.goal_type] ?? c.goal_type : null,
+        target_amount: c.goal_target != null ? formatCurrency(c.goal_target) : null,
+        target_date: c.goal_target_date,
+      });
+    } catch (error) {
+      return errorResult(error);
+    }
+  }
+);
+
 server.tool(
   "list_uncategorized_transactions",
   "Lists transactions that don't yet have a category assigned, so they can be reviewed and categorized.",

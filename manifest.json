@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "ynab-mcp",
   "display_name": "YNAB",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "description": "A custom MCP server for YNAB (You Need A Budget) — view budgets, categorize and approve transactions, search, and reporting",
   "author": {
     "name": "Scott Fontaine"
@@ -46,6 +46,14 @@
     {
       "name": "move_money_between_categories",
       "description": "Moves budgeted money from one category to another within the same month."
+    },
+    {
+      "name": "get_category_targets",
+      "description": "Lists categories with a target (goal) set, and progress toward it."
+    },
+    {
+      "name": "set_category_target",
+      "description": "Sets, updates, or clears a target (goal) on a category."
     },
     {
       "name": "list_uncategorized_transactions",
