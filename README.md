@@ -25,6 +25,12 @@ Built as a Claude Desktop Extension (`.mcpb`), which packages the server so it c
 | `get_month_summary` | Income/budgeted/spent/age-of-money snapshot |
 | `list_overspent_categories` | Categories that went negative this month |
 | `spending_by_category` | Total spend per category over a date range |
+| `spending_trend` | Month-by-month spending trend, overall or for one category |
+| `net_worth_snapshot` | Total balance across every account in every budget |
+| `top_payees` | Total spend grouped by payee over a date range |
+| `largest_transactions` | Biggest purchases in a date range |
+| `detect_recurring_charges` | Flags payees that bill a consistent recurring amount (e.g. subscriptions) |
+| `budget_health_check` | One-glance digest: Ready to Assign, age of money, overspent categories, uncategorized/unapproved counts |
 | `move_money_between_categories` | Moves budgeted money from one category to another |
 | `list_uncategorized_transactions` | Transactions with no category yet |
 | `list_unapproved_transactions` | Transactions awaiting approval |

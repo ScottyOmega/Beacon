@@ -826,6 +826,19 @@ function firstOfCurrentMonth() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
 }
 
+function monthsAgo(n) {
+  const d = new Date();
+  d.setDate(1);
+  d.setMonth(d.getMonth() - n);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+}
+
+function stdDev(nums) {
+  const avg = nums.reduce((a, b) => a + b, 0) / nums.length;
+  const variance = nums.reduce((a, b) => a + (b - avg) ** 2, 0) / nums.length;
+  return { avg, stdDev: Math.sqrt(variance) };
+}
+
 server.tool(
   "spending_by_category",
   "Reports total spending per category over a date range (defaults to the current month so far). Excludes transfers between your own accounts.",
@@ -947,6 +960,250 @@ server.tool(
         return textResult({ message: "No overspent categories — nice work." });
       }
       return textResult(overspent);
+    } catch (error) {
+      return errorResult(error);
+    }
+  }
+);
+
+server.tool(
+  "spending_trend",
+  "Shows how spending has changed month by month over a recent window — either overall or for one category. Useful for spotting whether spending in an area is creeping up or down over time.",
+  {
+    budget_id: z
+      .string()
+      .optional()
+      .default("last-used")
+      .describe("The budget ID, or 'last-used' for the most recently used budget."),
+    category_name: z
+      .string()
+      .optional()
+      .describe("Limit the trend to one category (partial, case-insensitive match). Omit for overall spending."),
+    months: z
+      .number()
+      .optional()
+      .default(6)
+      .describe("How many months back to look, including the current month."),
+  },
+  async ({ budget_id, category_name, months }) => {
+    try {
+      const since = monthsAgo(months - 1);
+      const data = await ynabFetch(`/budgets/${budget_id}/transactions?since_date=${since}`);
+      const query = category_name?.toLowerCase();
+      const byMonth = new Map();
+      for (const t of data.transactions) {
+        if (t.deleted || t.transfer_account_id || !t.category_id) continue;
+        if (query && !t.category_name?.toLowerCase().includes(query)) continue;
+        const month = t.date.slice(0, 7);
+        byMonth.set(month, (byMonth.get(month) ?? 0) + t.amount);
+      }
+      const trend = [...byMonth.entries()]
+        .sort(([a], [b]) => (a < b ? -1 : 1))
+        .map(([month, milliunits]) => ({ month, spent: formatCurrency(-milliunits) }));
+      return textResult({
+        category: category_name ?? "all categories",
+        trend,
+      });
+    } catch (error) {
+      return errorResult(error);
+    }
+  }
+);
+
+server.tool(
+  "net_worth_snapshot",
+  "Totals your current balance across every open account in every budget, into a single net worth figure, plus a per-budget breakdown.",
+  {},
+  async () => {
+    try {
+      const budgetsData = await ynabFetch("/budgets");
+      let totalMilliunits = 0;
+      const budgets = [];
+      for (const budget of budgetsData.budgets) {
+        const accountsData = await ynabFetch(`/budgets/${budget.id}/accounts`);
+        const openAccounts = accountsData.accounts.filter((a) => !a.closed && !a.deleted);
+        const budgetTotal = openAccounts.reduce((sum, a) => sum + a.balance, 0);
+        totalMilliunits += budgetTotal;
+        budgets.push({ budget_name: budget.name, total: formatCurrency(budgetTotal) });
+      }
+      return textResult({
+        net_worth: formatCurrency(totalMilliunits),
+        by_budget: budgets,
+      });
+    } catch (error) {
+      return errorResult(error);
+    }
+  }
+);
+
+server.tool(
+  "top_payees",
+  "Reports total spending grouped by payee over a date range (defaults to the current month so far) — who you spend the most money with. Excludes transfers between your own accounts.",
+  {
+    budget_id: z
+      .string()
+      .optional()
+      .default("last-used")
+      .describe("The budget ID, or 'last-used' for the most recently used budget."),
+    since_date: z
+      .string()
+      .optional()
+      .describe("Start date, YYYY-MM-DD. Defaults to the first of the current month."),
+    until_date: z.string().optional().describe("End date, YYYY-MM-DD. Defaults to no upper bound."),
+    limit: z.number().optional().default(10).describe("Maximum number of payees to return."),
+  },
+  async ({ budget_id, since_date, until_date, limit }) => {
+    try {
+      const effectiveSince = since_date ?? firstOfCurrentMonth();
+      const data = await ynabFetch(`/budgets/${budget_id}/transactions?since_date=${effectiveSince}`);
+      const byPayee = new Map();
+      for (const t of data.transactions) {
+        if (t.deleted || t.transfer_account_id || !t.payee_name) continue;
+        if (until_date && t.date > until_date) continue;
+        byPayee.set(t.payee_name, (byPayee.get(t.payee_name) ?? 0) + t.amount);
+      }
+      const payees = [...byPayee.entries()]
+        .map(([payee_name, milliunits]) => ({ payee_name, spent: formatCurrency(-milliunits) }))
+        .sort(
+          (a, b) =>
+            parseFloat(b.spent.replace(/[$,]/g, "")) - parseFloat(a.spent.replace(/[$,]/g, ""))
+        )
+        .slice(0, limit);
+      return textResult({ since_date: effectiveSince, until_date: until_date ?? null, payees });
+    } catch (error) {
+      return errorResult(error);
+    }
+  }
+);
+
+server.tool(
+  "largest_transactions",
+  "Lists the biggest purchases (outflows) in a date range (defaults to the current month so far) — a quick gut-check on where money actually went. Excludes transfers between your own accounts.",
+  {
+    budget_id: z
+      .string()
+      .optional()
+      .default("last-used")
+      .describe("The budget ID, or 'last-used' for the most recently used budget."),
+    since_date: z
+      .string()
+      .optional()
+      .describe("Start date, YYYY-MM-DD. Defaults to the first of the current month."),
+    until_date: z.string().optional().describe("End date, YYYY-MM-DD. Defaults to no upper bound."),
+    limit: z.number().optional().default(10).describe("Maximum number of transactions to return."),
+  },
+  async ({ budget_id, since_date, until_date, limit }) => {
+    try {
+      const effectiveSince = since_date ?? firstOfCurrentMonth();
+      const data = await ynabFetch(`/budgets/${budget_id}/transactions?since_date=${effectiveSince}`);
+      const outflows = data.transactions
+        .filter((t) => !t.deleted && !t.transfer_account_id && t.amount < 0)
+        .filter((t) => !until_date || t.date <= until_date)
+        .sort((a, b) => a.amount - b.amount)
+        .slice(0, limit)
+        .map((t) => ({
+          date: t.date,
+          payee_name: t.payee_name,
+          category_name: t.category_name,
+          amount: formatCurrency(t.amount),
+          memo: t.memo,
+        }));
+      return textResult(outflows);
+    } catch (error) {
+      return errorResult(error);
+    }
+  }
+);
+
+server.tool(
+  "detect_recurring_charges",
+  "Flags payees that appear to bill a consistent amount repeatedly over the last several months — useful for spotting subscriptions, including ones you may have forgotten about. Heuristic: amounts from the same payee that stay within 5% of their average, occurring at least min_occurrences times.",
+  {
+    budget_id: z
+      .string()
+      .optional()
+      .default("last-used")
+      .describe("The budget ID, or 'last-used' for the most recently used budget."),
+    lookback_months: z
+      .number()
+      .optional()
+      .default(6)
+      .describe("How many months back to look for patterns."),
+    min_occurrences: z
+      .number()
+      .optional()
+      .default(3)
+      .describe("Minimum number of matching transactions to count as recurring."),
+  },
+  async ({ budget_id, lookback_months, min_occurrences }) => {
+    try {
+      const since = monthsAgo(lookback_months - 1);
+      const data = await ynabFetch(`/budgets/${budget_id}/transactions?since_date=${since}`);
+      const byPayee = new Map();
+      for (const t of data.transactions) {
+        if (t.deleted || t.transfer_account_id || !t.payee_name || t.amount >= 0) continue;
+        const entry = byPayee.get(t.payee_name) ?? { amounts: [], dates: [] };
+        entry.amounts.push(Math.abs(t.amount) / 1000);
+        entry.dates.push(t.date);
+        byPayee.set(t.payee_name, entry);
+      }
+      const recurring = [];
+      for (const [payee_name, entry] of byPayee.entries()) {
+        if (entry.amounts.length < min_occurrences) continue;
+        const { avg, stdDev: sd } = stdDev(entry.amounts);
+        if (avg === 0 || sd / avg > 0.05) continue;
+        recurring.push({
+          payee_name,
+          occurrences: entry.amounts.length,
+          typical_amount: `$${avg.toFixed(2)}`,
+          most_recent_date: entry.dates.sort().at(-1),
+        });
+      }
+      recurring.sort(
+        (a, b) => parseFloat(b.typical_amount.slice(1)) - parseFloat(a.typical_amount.slice(1))
+      );
+      if (recurring.length === 0) {
+        return textResult({ message: "No recurring-charge patterns detected in this window." });
+      }
+      return textResult(recurring);
+    } catch (error) {
+      return errorResult(error);
+    }
+  }
+);
+
+server.tool(
+  "budget_health_check",
+  "A single at-a-glance digest of budget health: Ready to Assign, age of money, any overspent categories, and counts of uncategorized/unapproved transactions — instead of checking each separately.",
+  {
+    budget_id: z
+      .string()
+      .optional()
+      .default("last-used")
+      .describe("The budget ID, or 'last-used' for the most recently used budget."),
+  },
+  async ({ budget_id }) => {
+    try {
+      const [monthData, categoriesData, uncategorizedData, unapprovedData] = await Promise.all([
+        ynabFetch(`/budgets/${budget_id}/months/current`),
+        ynabFetch(`/budgets/${budget_id}/categories`),
+        ynabFetch(`/budgets/${budget_id}/transactions?type=uncategorized`),
+        ynabFetch(`/budgets/${budget_id}/transactions?type=unapproved`),
+      ]);
+      const overspent = categoriesData.category_groups
+        .filter((g) => !g.hidden && !g.deleted)
+        .flatMap((g) =>
+          g.categories
+            .filter((c) => !c.hidden && !c.deleted && c.balance < 0)
+            .map((c) => ({ category_name: c.name, balance: formatCurrency(c.balance) }))
+        );
+      return textResult({
+        ready_to_assign: formatCurrency(monthData.month.to_be_budgeted),
+        age_of_money_days: monthData.month.age_of_money,
+        overspent_categories: overspent,
+        uncategorized_transaction_count: uncategorizedData.transactions.length,
+        unapproved_transaction_count: unapprovedData.transactions.length,
+      });
     } catch (error) {
       return errorResult(error);
     }

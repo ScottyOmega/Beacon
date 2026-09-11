@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "ynab-mcp",
   "display_name": "YNAB",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "description": "A custom MCP server for YNAB (You Need A Budget) — view budgets, categorize and approve transactions, search, and reporting",
   "author": {
     "name": "Scott Fontaine"
@@ -106,6 +106,30 @@
     {
       "name": "list_overspent_categories",
       "description": "Lists categories that have been overspent this month."
+    },
+    {
+      "name": "spending_trend",
+      "description": "Shows month-by-month spending over a recent window, overall or for one category."
+    },
+    {
+      "name": "net_worth_snapshot",
+      "description": "Totals your current balance across every account in every budget."
+    },
+    {
+      "name": "top_payees",
+      "description": "Reports total spending grouped by payee over a date range."
+    },
+    {
+      "name": "largest_transactions",
+      "description": "Lists the biggest purchases in a date range."
+    },
+    {
+      "name": "detect_recurring_charges",
+      "description": "Flags payees that appear to bill a consistent recurring amount, e.g. subscriptions."
+    },
+    {
+      "name": "budget_health_check",
+      "description": "One-glance digest: Ready to Assign, age of money, overspent categories, uncategorized/unapproved counts."
     }
   ],
   "user_config": {
