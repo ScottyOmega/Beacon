@@ -501,6 +501,41 @@ server.tool(
 );
 
 server.tool(
+  "set_transaction_memo",
+  "Sets (replaces) the memo on a transaction. Pass an empty string to clear the memo. To keep an existing memo, look it up first with search_transactions and include it in the new text.",
+  {
+    budget_id: z
+      .string()
+      .optional()
+      .default("last-used")
+      .describe("The budget ID, or 'last-used' for the most recently used budget."),
+    transaction_id: z.string().describe("The ID of the transaction to update."),
+    memo: z
+      .string()
+      .max(500)
+      .describe("The new memo text (max 500 characters). Empty string clears it."),
+  },
+  async ({ budget_id, transaction_id, memo }) => {
+    try {
+      const data = await ynabFetch(
+        `/budgets/${budget_id}/transactions/${transaction_id}`,
+        {
+          method: "PUT",
+          body: JSON.stringify({ transaction: { memo: memo === "" ? null : memo } }),
+        }
+      );
+      return textResult({
+        id: data.transaction.id,
+        payee_name: data.transaction.payee_name,
+        memo: data.transaction.memo,
+      });
+    } catch (error) {
+      return errorResult(error);
+    }
+  }
+);
+
+server.tool(
   "search_transactions",
   "Searches transactions in a budget by payee, category, account, and/or date range. All filters are optional and combine together.",
   {

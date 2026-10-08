@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "ynab-mcp",
   "display_name": "YNAB",
-  "version": "1.10.0",
+  "version": "1.11.0",
   "description": "A custom MCP server for YNAB (You Need A Budget) — view budgets, categorize and approve transactions, search, and reporting",
   "author": {
     "name": "Scott Fontaine"
@@ -66,6 +66,10 @@
     {
       "name": "approve_transaction",
       "description": "Marks a transaction as approved."
+    },
+    {
+      "name": "set_transaction_memo",
+      "description": "Sets, replaces, or clears the memo on a transaction."
     },
     {
       "name": "search_transactions",

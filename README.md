@@ -36,6 +36,7 @@ Built as a Claude Desktop Extension (`.mcpb`), which packages the server so it c
 | `list_uncategorized_transactions` | Transactions with no category yet |
 | `list_unapproved_transactions` | Transactions awaiting approval |
 | `approve_transaction` | Marks a transaction approved |
+| `set_transaction_memo` | Sets, replaces, or clears the memo on a transaction |
 | `search_transactions` | Filter by payee, category, account, date range |
 | `suggest_category` | Suggests a category for one transaction, based on payee history and amount |
 | `bulk_suggest_categories` | Runs `suggest_category` across every uncategorized transaction |
@@ -70,7 +71,7 @@ Then install the resulting `ynab-mcp.mcpb` as described above.
 
 - Your YNAB token is never stored in this repository or bundled into the `.mcpb` package. It's collected by Claude Desktop's own extension settings UI (a masked field) and injected as an environment variable (`YNAB_ACCESS_TOKEN`) when the server runs.
 - The server only talks to `api.ynab.com` using that token; nothing else.
-- Tools that change data (`categorize_transaction`, `split_transaction`, `approve_transaction`, `move_money_between_categories`, `create_category`, `create_category_group`, `set_category_target`) only run when Claude explicitly calls them — nothing runs automatically in the background.
+- Tools that change data (`categorize_transaction`, `split_transaction`, `approve_transaction`, `move_money_between_categories`, `create_category`, `create_category_group`, `set_category_target`, `set_transaction_memo`) only run when Claude explicitly calls them — nothing runs automatically in the background.
 
 ## License
 
